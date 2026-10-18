@@ -121,6 +121,7 @@ private struct PortChip: View {
                 .padding(.horizontal, 5)
                 .padding(.vertical, 1)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(hovering ? Theme.textTertiary : Theme.border, lineWidth: 1))
+                .contentShape(Rectangle())   // .plain só clica em pixels opacos
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
@@ -148,6 +149,7 @@ private struct KillButton: View {
             }
             .frame(width: 20, height: 20)
             .background(hovering && !killing ? Theme.danger.opacity(0.12) : .clear, in: .rect(cornerRadius: 4))
+            .contentShape(Rectangle())   // .plain só clica em pixels opacos
         }
         .buttonStyle(.plain)
         .disabled(killing)
@@ -168,6 +170,7 @@ private struct ActionButton: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius).stroke(Theme.border, lineWidth: 1))
+                .contentShape(Rectangle())   // .plain só clica em pixels opacos
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }

@@ -121,6 +121,7 @@ private struct StepButton: View {
                 .foregroundStyle(disabled ? Theme.textTertiary : hovering ? Theme.textPrimary : Theme.textSecondary)
                 .frame(width: 20, height: 20)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.border, lineWidth: 1))
+                .contentShape(Rectangle())   // .plain só clica em pixels opacos
         }
         .buttonStyle(.plain)
         .disabled(disabled)

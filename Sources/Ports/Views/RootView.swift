@@ -83,6 +83,8 @@ struct RootView: View {
                 Image(systemName: "gearshape")
                     .font(.system(size: 11, weight: .light))
                     .foregroundStyle(Theme.textSecondary)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())   // .plain só clica em pixels opacos
             }
             .buttonStyle(.plain)
             .keyboardShortcut(",")
