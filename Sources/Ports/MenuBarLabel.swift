@@ -17,7 +17,7 @@ struct MenuBarLabel: View {
             Image(systemName: "point.3.connected.trianglepath.dotted")
                 .font(.system(size: 13, weight: .light))
             if count > 0 {
-                Text("\(count)").font(Theme.mono(12, .medium))
+                Text("\(count)").font(Theme.font(12, .medium))
             }
         }
         .foregroundStyle(stale ? Theme.stale : .black)

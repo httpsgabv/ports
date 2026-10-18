@@ -11,7 +11,7 @@
   - Files: `Sources/Ports/PortStore.swift`
 
 - [x] Task: Label da menu bar com contador e estado stale; wiring no App
-  - Acceptance: contador mono; âmbar se stale; esmaecido com 0
+  - Acceptance: contador; âmbar se stale; esmaecido com 0
   - Verify: `./scripts/bundle.sh && open build/Ports.app`; subir/derrubar `python3 -m http.server 8765` e observar
   - Files: `Sources/Ports/MenuBarLabel.swift`, `Sources/Ports/PortsApp.swift`
 

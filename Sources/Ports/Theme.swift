@@ -15,12 +15,9 @@ enum Theme {
     static let radius: CGFloat = 6
     static let hairline: CGFloat = 0.5
 
-    static func mono(_ size: CGFloat = 12, _ weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
-    }
-
-    static func sans(_ size: CGFloat = 13, _ weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight)
+    /// Fonte do sistema (SF Pro) com dígitos tabulares: números não "dançam" ao atualizar.
+    static func font(_ size: CGFloat = 13, _ weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight).monospacedDigit()
     }
 }
 
@@ -36,7 +33,7 @@ struct CapsLabel: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(Theme.mono(10, .medium))
+            .font(Theme.font(10, .medium))
             .tracking(1)
             .foregroundStyle(color)
     }

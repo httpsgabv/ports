@@ -93,7 +93,7 @@ Inspiração: Vercel / X / SpaceX / Tesla. **Dark only.** Cor só com significad
 | `stale` | `#F5A623` | processo "possivelmente esquecido" |
 | `danger` | `#FF4D4D` | kill (só no hover/ação) |
 
-Tipografia: SF Mono (`.monospaced`) para números (porta, PID, métricas); SF Pro para nomes. Labels em CAPS, 10pt, tracking +1. Sem sombras, sem gradientes, cantos 6pt, ícones SF Symbols em peso `.light`.
+Tipografia: só a fonte do sistema (SF Pro) via `Theme.font`, com `.monospacedDigit()` para números não mudarem de largura ao atualizar. Labels em CAPS, 10pt, tracking +1. Sem sombras, sem gradientes, cantos 6pt, ícones SF Symbols em peso `.light`.
 
 ## Testing Strategy
 

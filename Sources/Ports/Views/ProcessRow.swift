@@ -19,7 +19,7 @@ struct ProcessRow: View {
             HStack(spacing: 8) {
                 Circle().fill(Theme.live).frame(width: 6, height: 6)
                 Text(process.name)
-                    .font(Theme.sans(13, .medium))
+                    .font(Theme.font(13, .medium))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                     .accessibilityLabel("\(process.name), ports \(process.ports.map(String.init).joined(separator: ", ")), up \(uptime)")
@@ -34,7 +34,7 @@ struct ProcessRow: View {
 
             if let error {
                 Text(error)
-                    .font(Theme.mono(11))
+                    .font(Theme.font(11))
                     .foregroundStyle(Theme.danger)
                     .padding(.leading, 14)
             }
@@ -64,7 +64,7 @@ struct ProcessRow: View {
             Text(" · \(formatCPU(process.cpuPercent)) · \(formatBytes(process.memoryBytes))")
                 .fixedSize()
         }
-        .font(Theme.mono(11))
+        .font(Theme.font(11))
         .foregroundStyle(Theme.textSecondary)
         .accessibilityHidden(true)
     }
@@ -72,10 +72,10 @@ struct ProcessRow: View {
     private var details: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("PID \(String(process.pid))")
-                .font(Theme.mono(11))
+                .font(Theme.font(11))
                 .foregroundStyle(Theme.textTertiary)
             Text(process.command)
-                .font(Theme.mono(11))
+                .font(Theme.font(11))
                 .foregroundStyle(Theme.textSecondary)
                 .lineLimit(2)
                 .truncationMode(.middle)
@@ -116,7 +116,7 @@ private struct PortChip: View {
     var body: some View {
         Button { openPort(port) } label: {
             Text(":\(String(port))")
-                .font(Theme.mono(11))
+                .font(Theme.font(11))
                 .foregroundStyle(hovering ? Theme.textPrimary : Theme.textSecondary)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 1)

@@ -29,7 +29,7 @@ struct PreferencesView: View {
                 HStack(spacing: 10) {
                     StepButton(symbol: "minus", disabled: store.staleHours <= 1) { store.staleHours -= 1 }
                     Text("\(store.staleHours)h")
-                        .font(Theme.mono(12))
+                        .font(Theme.font(12))
                         .foregroundStyle(Theme.textPrimary)
                         .frame(minWidth: 28)
                     StepButton(symbol: "plus", disabled: store.staleHours >= 48) { store.staleHours += 1 }
@@ -54,7 +54,7 @@ struct PreferencesView: View {
             }
             if let loginError {
                 Text(loginError)
-                    .font(Theme.mono(11))
+                    .font(Theme.font(11))
                     .foregroundStyle(Theme.danger)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
