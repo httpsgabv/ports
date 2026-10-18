@@ -117,4 +117,4 @@ Tipografia: só a fonte do sistema (SF Pro) via `Theme.font`, com `.monospacedDi
 
 ## Open Questions
 
-- Nome final do app e ícone da menu bar: proposta `Ports` + SF Symbol `point.3.connected.trianglepath.dotted` (ou só o contador em mono). Decido visualmente na task.
+- Nome final do app e ícone da menu bar: proposta `Ports` + SF Symbol `point.3.connected.trianglepath.dotted`. Decido visualmente na task.

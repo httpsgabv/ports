@@ -30,7 +30,7 @@ final class PortStore {
 - **Cache por PID (custo):** com o popover fechado, `scan(reusing:)` roda só o `lsof` de LISTEN e busca detalhes apenas de PIDs novos (~34ms CPU/tick ≈ 0,7%). Popover aberto → scan completo (cpu/mem ao vivo). Sem cache, cada tick custava ~107ms de CPU em processos filhos (~2%). Upgrade se precisar: `libproc` (zero spawns).
 - Filtro: `showSystem == false` esconde `isSystem == true`.
 - Erro de scan: mantém a última lista, guarda `lastError`; próxima tentativa no próximo tick.
-- **Ícone:** SF Symbol + contador em SF Mono (`3`). Com 0 processos: só o símbolo, opacidade reduzida. Se qualquer processo visível estiver stale: o contador fica em `stale` (âmbar).
+- **Ícone:** SF Symbol + contador na fonte do sistema (`3`). Com 0 processos: só o símbolo, opacidade reduzida. Se qualquer processo visível estiver stale: o contador fica em `stale` (âmbar).
 
 ## Acceptance criteria
 
