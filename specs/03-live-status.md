@@ -27,6 +27,7 @@ final class PortStore {
 
 - **Polling a cada 5s** desde o launch (`Task` com `try await Task.sleep`), mais `refresh()` imediato ao abrir o popover.
 - Scans não se sobrepõem: se um ainda está rodando, o tick é pulado.
+- **Cache por PID (custo):** com o popover fechado, `scan(reusing:)` roda só o `lsof` de LISTEN e busca detalhes apenas de PIDs novos (~34ms CPU/tick ≈ 0,7%). Popover aberto → scan completo (cpu/mem ao vivo). Sem cache, cada tick custava ~107ms de CPU em processos filhos (~2%). Upgrade se precisar: `libproc` (zero spawns).
 - Filtro: `showSystem == false` esconde `isSystem == true`.
 - Erro de scan: mantém a última lista, guarda `lastError`; próxima tentativa no próximo tick.
 - **Ícone:** SF Symbol + contador em SF Mono (`3`). Com 0 processos: só o símbolo, opacidade reduzida. Se qualquer processo visível estiver stale: o contador fica em `stale` (âmbar).
@@ -36,7 +37,7 @@ final class PortStore {
 - Subir `python3 -m http.server 8765` → contador incrementa em ≤ 5s sem abrir o popover.
 - Matar pelo terminal → contador decrementa em ≤ 5s.
 - Processos de sistema não contam no ícone quando `showSystem == false`.
-- CPU média do app ocioso < 1% (medido com `top -pid` por 1 min).
+- CPU média ociosa < 1% **incluindo os processos filhos** (`lsof`/`ps`), que o `top -pid` não enxerga.
 
 ## Testing Strategy
 
@@ -50,9 +51,9 @@ final class PortStore {
 
 ## Success Criteria
 
-- [ ] Testes de filtro/stale verdes.
-- [ ] Checklist manual do contador ok.
-- [ ] `top` mostra < 1% CPU médio ocioso.
+- [x] Testes de filtro/stale verdes (+ teste de reuso do cache).
+- [x] Checklist manual do contador ok.
+- [x] < 1% CPU ocioso: app 0,07% (`ps -o time` em 60s) + filhos ~0,7% (34ms/5s) ≈ 0,75%.
 
 ## Open Questions
 

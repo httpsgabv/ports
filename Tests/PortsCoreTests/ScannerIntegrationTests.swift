@@ -20,6 +20,18 @@ import Testing
         #expect(elapsed < .milliseconds(300))
     }
 
+    @Test func scanReusesDetailsOfKnownPidsButRefreshesPorts() async throws {
+        let (fd, port) = try listenOnEphemeralPort()
+        defer { close(fd) }
+        let known = ListeningProcess(pid: getpid(), name: "cached", ports: [1], startedAt: .distantPast,
+                                     cpuPercent: 99, memoryBytes: 0, command: "cached", executablePath: "",
+                                     cwd: nil, isSystem: false)
+
+        let me = try #require(try await scan(reusing: [known]).first { $0.pid == getpid() })
+        #expect(me.cpuPercent == 99)       // sem ps para pid conhecido
+        #expect(me.ports.contains(port))   // portas sempre do lsof atual
+    }
+
     @Test func runThrowsForMissingBinary() async {
         await #expect(throws: ShellError.self) {
             try await run("/nonexistent/bin", [])

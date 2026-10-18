@@ -14,6 +14,11 @@ public struct ListeningProcess: Identifiable, Hashable, Sendable {
     public let cwd: String?
     public let isSystem: Bool
 
+    func with(ports: [UInt16]) -> Self {
+        Self(pid: pid, name: name, ports: ports, startedAt: startedAt, cpuPercent: cpuPercent,
+             memoryBytes: memoryBytes, command: command, executablePath: executablePath, cwd: cwd, isSystem: isSystem)
+    }
+
     public func isStale(now: Date = .now, threshold: TimeInterval) -> Bool {
         now.timeIntervalSince(startedAt) >= threshold
     }

@@ -101,5 +101,11 @@ func merge(
             isSystem: isSystemPath(d.executablePath)
         )
     }
-    .sorted { ($0.ports[0], $0.pid) < ($1.ports[0], $1.pid) }
+    .sortedByLowestPort()
+}
+
+extension [ListeningProcess] {
+    func sortedByLowestPort() -> Self {
+        sorted { ($0.ports[0], $0.pid) < ($1.ports[0], $1.pid) }
+    }
 }
