@@ -17,7 +17,7 @@ public enum KillResult: Equatable, Sendable {
     case failed(String)    // EPERM etc.
 }
 
-public func kill(_ process: ListeningProcess, grace: Duration = .seconds(3)) async -> KillResult
+public func terminate(_ process: ListeningProcess, grace: Duration = .seconds(3)) async -> KillResult   // não `kill`: colide com Darwin.kill
 ```
 
 Em `Ports` (app, usa AppKit):
@@ -57,8 +57,8 @@ Sem confirmação (decidido). Mata **só o pid listado**, não o grupo; se o `np
 
 ## Success Criteria
 
-- [ ] `swift test --filter Kill` verde (4 casos acima).
-- [ ] Nenhum teste deixa processo órfão (`pgrep -f "sleep 60"` vazio após `swift test`).
+- [x] `swift test --filter Kill` verde (4 casos acima + recusa de pid 1 e do próprio app; 5 execuções sem flakiness).
+- [x] Nenhum teste deixa processo órfão (`pgrep -f "sleep 60"` vazio após `swift test`).
 
 ## Open Questions
 

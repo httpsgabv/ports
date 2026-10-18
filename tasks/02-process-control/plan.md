@@ -4,7 +4,7 @@ Spec: [specs/02-process-control.md](../../specs/02-process-control.md)
 
 ## Componentes
 
-1. `Sources/PortsCore/Killer.swift`: `KillResult` + `kill(_:grace:)`.
+1. `Sources/PortsCore/Killer.swift`: `KillResult` + `terminate(_:grace:)`.
    - Identidade: reusa `Shell.run` + `parsePsDetails` da spec 01 para reler `lstart` do pid (sem código novo de parsing).
    - Sinais: `Darwin.kill(pid, SIGTERM/SIGKILL)`, checagem `kill(pid, 0)` + `errno == ESRCH`.
    - Guardas: `pid <= 1 || pid == getpid()` → `.failed("refused")`.

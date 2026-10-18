@@ -7,7 +7,7 @@ Spec: [specs/04-port-list-ui.md](../../specs/04-port-list-ui.md)
 1. `Sources/PortsCore/Formatting.swift`: `formatUptime`, `formatBytes`, `abbreviateHome` (puros, testados).
 2. `Sources/Ports/Views/RootView.swift`: header / lista ou vazio / footer. Troca para preferências (spec 05) via `@State`.
 3. `Sources/Ports/Views/ProcessRow.swift`: linha colapsada + expandida, chips de porta, botão kill com estados (idle, hover, killing, error).
-4. Wiring: kill chama `PortsCore.kill` → `store.remove(pid)` → `refresh()`.
+4. Wiring: kill chama `terminate` → `store.remove(pid)` → `refresh()`.
 
 ## Ordem
 
