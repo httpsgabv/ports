@@ -47,6 +47,14 @@ public func terminateAll(_ processes: [ListeningProcess]) async -> [KillResult] 
     }
 }
 
+/// Kill do grupo: os processos/containers listados + os containers internos das stacks compose.
+public func terminateGroup(_ group: ProcessGroup) async -> [KillResult] {
+    async let listed = terminateAll(group.processes)
+    let internals = group.internalContainerIDs
+    let stack = internals.isEmpty ? [] : [await stopContainers(internals)]
+    return await listed + stack
+}
+
 func startTime(of pid: Int32) async -> Date? {
     let out = try? await run("/bin/ps", ["-o", "pid=,lstart=,%cpu=,rss=,comm=", "-p", String(pid)])
     return out.flatMap { parsePsDetails($0)[pid]?.startedAt }

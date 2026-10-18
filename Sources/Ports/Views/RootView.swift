@@ -198,8 +198,8 @@ struct RootView: View {
     }
 
     private func killAll(_ group: ProcessGroup) async -> [KillResult] {
-        log.notice("killAll \(group.id, privacy: .public) ids=\(group.processes.map(\.id), privacy: .public)")
-        let results = await terminateAll(group.processes)
+        log.notice("killAll \(group.id, privacy: .public) ids=\(group.processes.map(\.id), privacy: .public) internal=\(group.internalContainerIDs.count)")
+        let results = await terminateGroup(group)   // inclui containers internos da stack
         log.notice("killAll \(group.id, privacy: .public) -> \(String(describing: results), privacy: .public)")
         withAnimation(.easeOut(duration: 0.2)) {
             for (process, result) in zip(group.processes, results) where result.failure == nil {

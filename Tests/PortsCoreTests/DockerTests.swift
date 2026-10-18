@@ -9,11 +9,12 @@ import Testing
         "9f1e2d3c4b5a\tsupabase_db_yt-city\tpublic.ecr.aws/supabase/postgres:17.11.0.004\t0.0.0.0:54322->5432/tcp\t2026-10-17 21:00:00 -0300 -03\tyt-city\t\t/Users/gabriel/Documents/dev/yt-city",
         "aaaaaaaaaaaa\tapi-web-1\tnode:22\t127.0.0.1:8000-8001->8000-8001/tcp\t2026-10-17 20:00:00 -0300 -03\tapi\t/Users/gabriel/dev/api\t",
         "bbbbbbbbbbbb\tworker\tredis:7\t6379/tcp\t2026-10-17 20:00:00 -0300 -03\t\t\t",
+        "cccccccccccc\tapi-queue-1\tredis:7\t6379/tcp\t2026-10-17 20:00:00 -0300 -03\tapi\t/Users/gabriel/dev/api\t",
     ].joined(separator: "\n") + "\n"
 
     @Test func parsesPortsLabelsAndDates() throws {
         let cs = parseDockerPs(Self.ps)
-        #expect(cs.count == 4)
+        #expect(cs.count == 5)
 
         let caddy = cs[0]
         #expect(caddy.id == "2c0d08eb1254")
@@ -70,6 +71,20 @@ import Testing
         let leftover = out[3]
         #expect(leftover.ports == [60000])
         #expect(leftover.isSystem && leftover.container == nil)
+    }
+
+    @Test func publishedContainersCarryTheirStacksInternalContainers() throws {
+        let runtime = ListeningProcess(pid: 1463, name: "com.docker.backend", ports: [8000, 8001, 8795], startedAt: .distantPast,
+                                       cpuPercent: 0, memoryBytes: 0, command: "", executablePath: "x", cwd: nil, isSystem: true)
+        let out = expandContainers([runtime], parseDockerPs(Self.ps), resolve: { Project(root: $0, name: "api") })
+        let web = try #require(out.first { $0.container?.name == "api-web-1" })
+        #expect(web.container?.stackIDs == ["cccccccccccc"])        // api-queue-1: mesmo compose, sem porta
+        let caddy = try #require(out.first { $0.container?.name == "ports-probe" })
+        #expect(caddy.container?.stackIDs == [])                     // sem compose: nada
+        // "worker" (sem porta, sem compose) não entra em stack nenhuma
+
+        let group = try #require(groupByProject(out).first { $0.project?.name == "api" })
+        #expect(group.internalContainerIDs == ["cccccccccccc"])
     }
 
     @Test func containerKeyUsesName() throws {

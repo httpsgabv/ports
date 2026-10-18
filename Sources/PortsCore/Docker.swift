@@ -69,6 +69,10 @@ func expandContainers(
     _ containers: [DockerContainer],
     resolve: (String) -> Project = { resolveProject(cwd: $0) }
 ) -> [ListeningProcess] {
+    var internals: [String: [String]] = [:]   // compose project → ids sem porta publicada
+    for c in containers where c.hostPorts.isEmpty {
+        if let project = c.composeProject { internals[project, default: []].append(c.id) }
+    }
     var out: [ListeningProcess] = []
     for p in processes {
         guard isContainerRuntime(p.name) else { out.append(p); continue }
@@ -78,7 +82,8 @@ func expandContainers(
             guard !mine.isEmpty else { continue }
             left.subtract(mine)
             var entry = p.with(ports: mine.sorted())
-            entry.container = Container(id: c.id, name: c.name, image: c.image)
+            entry.container = Container(id: c.id, name: c.name, image: c.image,
+                                        stackIDs: c.composeProject.flatMap { internals[$0] } ?? [])
             entry.kind = imageKind(c.image)
             entry.startedAt = c.createdAt ?? p.startedAt
             entry.cpuPercent = 0
@@ -119,9 +124,14 @@ func withContainers(_ processes: [ListeningProcess]) async -> [ListeningProcess]
 }
 
 func stopContainer(_ container: Container) async -> KillResult {
+    await stopContainers([container.id])
+}
+
+/// Um `docker stop` para vários: o docker para em paralelo.
+func stopContainers(_ ids: [String]) async -> KillResult {
     guard let docker = dockerBinary() else { return .failed("docker not found") }
     do {
-        _ = try await run(docker, ["stop", container.id], okStatuses: [0], timeout: .seconds(20))
+        _ = try await run(docker, ["stop"] + ids, okStatuses: [0], timeout: .seconds(20))
         return .terminated
     } catch {
         return .failed(error.localizedDescription)

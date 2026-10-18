@@ -4,6 +4,8 @@ public struct Container: Hashable, Sendable {
     public let id: String       // ID curto do docker ps
     public let name: String     // "supabase_db_yt-city"
     public let image: String    // "public.ecr.aws/supabase/postgres:17.11.0.004"
+    /// Containers sem porta publicada do mesmo projeto compose (ex: auth/rest do Supabase): param junto com o grupo.
+    public var stackIDs: [String] = []
 }
 
 /// Um processo (ou container Docker) ouvindo em uma ou mais portas TCP.

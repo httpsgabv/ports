@@ -5,6 +5,10 @@ public struct ProcessGroup: Identifiable, Sendable {
 
     public var memoryBytes: UInt64 { processes.reduce(0) { $0 + $1.memoryBytes } }
     public var ports: [UInt16] { processes.flatMap(\.ports).sorted() }
+    /// Containers internos (sem porta) das stacks compose do grupo: não aparecem na lista, mas param com o ×.
+    public var internalContainerIDs: [String] {
+        Set(processes.compactMap(\.container).flatMap(\.stackIDs)).sorted()
+    }
 }
 
 /// Agrupa pela raiz do projeto mantendo a ordem de entrada (já ordenada pela menor porta).

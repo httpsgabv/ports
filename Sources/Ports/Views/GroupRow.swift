@@ -68,6 +68,11 @@ struct GroupRow: View {
                     Text(" · ")
                 }
                 Text(formatBytes(group.memoryBytes)).fixedSize()
+                if !group.internalContainerIDs.isEmpty {
+                    Text(" · +\(group.internalContainerIDs.count) internal")
+                        .fixedSize()
+                        .help("Containers without published ports in the same compose stack. They stop with ×.")
+                }
             }
             .font(Theme.font(11))
             .foregroundStyle(Theme.textSecondary)
@@ -104,10 +109,11 @@ struct GroupRow: View {
     private func killAll() async {
         killing = true
         error = nil
-        let failures = await onKillAll().compactMap(\.failure)
+        let results = await onKillAll()
+        let failures = results.compactMap(\.failure)
         killing = false
         guard let first = failures.first else { return }
-        error = "\(failures.count) of \(group.processes.count) failed: \(first)"
+        error = "\(failures.count) of \(results.count) failed: \(first)"
         try? await Task.sleep(for: .seconds(3))
         error = nil
     }

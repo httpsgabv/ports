@@ -35,6 +35,7 @@ public let container: Container?
 ## Controle
 
 - `×` em container → `docker stop <id>` (timeout padrão do docker, 10s) → `.terminated`. Falha → `.failed(<stderr curto>)`. Nunca `kill` no PID do runtime.
+- **`×` do grupo para a stack inteira** (decidido em 17/out, depois do teste com o Supabase): além dos containers listados, faz `docker stop` nos containers **sem porta publicada** do mesmo projeto compose (`stackIDs`). Sem isso, parar o `yt-city` deixava 6 dos 11 containers rodando (auth, rest, realtime…). A meta do grupo mostra `+N internal`. O `×` de um container avulso continua parando só ele.
 - `OPEN ↗` funciona igual (porta do host).
 - `FINDER`/`EDITOR` usam o `working_dir` do compose, quando existe.
 
@@ -66,7 +67,7 @@ public let container: Container?
 - [x] Testes de parser e merge verdes; integração verde com Docker rodando (`caddy:2-alpine`: aparece, sobrevive ao reuso, `docker stop` derruba).
 - [x] Manual: `CADDY :8795 :8796` com ícone de caixa; `×` → log `kill c:… -> terminated` em ~270ms, container removido, runtime do Docker intacto.
 - [x] Custo ocioso com Docker: filhos 32ms/tick (`lsof` + `docker ps`) + app 0,08% ≈ 0,73%.
-- [ ] Compose/Supabase agrupando com o app do repo: coberto por teste unitário, não verificado com a stack real.
+- [x] Stack real do Supabase (`yt-city`, 11 containers): 1 grupo com o app + 5 containers publicados (`KONG`, `POSTGRES`, `STUDIO`, `MAILPIT`, `LOGFLARE`) e `+6 internal`; o `×` do grupo parou os 11 e o app em 3,4s (log: 7× `terminated`).
 - [ ] Docker Desktop fechado → nenhum `docker ps`: garantido pelo guard (só roda com runtime escutando), não verificado na prática.
 
 ## Open Questions
