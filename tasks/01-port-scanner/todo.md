@@ -16,7 +16,7 @@
   - Files: `Sources/PortsCore/Shell.swift`, `Sources/PortsCore/Scanner.swift`, `Tests/PortsCoreTests/ScannerTests.swift`
 
 - [x] Task: Teste de integração com socket real
-  - Acceptance: teste faz bind numa porta efêmera e `scan()` retorna o pid do teste com essa porta, cwd e < 300ms (medido: ~130ms)
+  - Acceptance: teste faz bind numa porta efêmera e `scan()` retorna o pid do teste com essa porta e cwd (tempo: meta da spec, medido ~130ms, sem asserção)
   - Verify: `swift test --filter ScannerIntegration`
   - Files: `Tests/PortsCoreTests/ScannerIntegrationTests.swift`
 

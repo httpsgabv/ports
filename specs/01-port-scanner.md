@@ -47,7 +47,7 @@ Exceção: `.app` dentro de `.framework/` (Python oficial/Homebrew roda de `Pyth
 - Processo que morre entre o `lsof` e o `ps` é descartado silenciosamente (não lança erro).
 - `lsof` sem resultados (exit 1, saída vazia) → `[]`, não erro.
 - Falha real ao executar um binário → `throw` com mensagem legível.
-- Pipeline completo < 300ms na minha máquina.
+- Pipeline completo < 300ms na minha máquina **ociosa** (medido: ~130ms). Meta de performance, verificada manualmente; não é asserção de teste, porque o wall-clock estoura com a máquina carregada (18/out: 650–1600ms com load average ~50 de outros apps).
 
 ## Testing Strategy
 
