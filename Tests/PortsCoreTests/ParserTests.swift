@@ -13,6 +13,27 @@ import Testing
         #expect(r[41643]?.ports == [7265])
     }
 
+    @Test func connectionsNeverBecomePorts() {
+        let r = parseLsofListen(Fixture.lsofTCP)
+        #expect(r[7359]?.ports == [8781])          // não 64384/64390
+        #expect(r[620]?.ports == [58996])          // não 58465
+        #expect(r[900]?.ports == [3000])           // não 5432/60001
+    }
+
+    @Test func countsOnlyInboundConnections() {
+        let r = parseLsofListen(Fixture.lsofTCP)
+        #expect(r[7359]?.inbound == [8781, 8781])  // 2 clientes
+        #expect(r[620]?.inbound == [58996])
+        #expect(r[900]?.inbound == [])             // só saída (node → postgres)
+    }
+
+    @Test func dropsPidsWithoutListen() {
+        let r = parseLsofListen(Fixture.lsofTCP)
+        #expect(r[7373] == nil)                    // nc: só conexão de saída
+        #expect(r[671] == nil)
+        #expect(r.count == 3)
+    }
+
     @Test func lsofListenEmpty() {
         #expect(parseLsofListen("").isEmpty)
     }

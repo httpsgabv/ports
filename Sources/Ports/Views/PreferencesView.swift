@@ -25,7 +25,7 @@ struct PreferencesView: View {
             .padding(.vertical, 12)
             hairline
 
-            row("Stale after") {
+            row("Idle for") {
                 HStack(spacing: 10) {
                     StepButton(symbol: "minus", disabled: store.staleHours <= 1) { store.staleHours -= 1 }
                     Text("\(store.staleHours)h")
@@ -35,7 +35,7 @@ struct PreferencesView: View {
                     StepButton(symbol: "plus", disabled: store.staleHours >= 48) { store.staleHours += 1 }
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Stale after \(store.staleHours) hours")
+                .accessibilityLabel("Idle for \(store.staleHours) hours")
                 .accessibilityAdjustableAction { direction in
                     switch direction {
                     case .increment: store.staleHours = min(48, store.staleHours + 1)

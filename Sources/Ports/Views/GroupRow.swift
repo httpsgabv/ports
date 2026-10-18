@@ -5,6 +5,7 @@ import SwiftUI
 struct GroupRow: View {
     let group: ProcessGroup
     let isStale: (ListeningProcess) -> Bool
+    let idleSince: (ListeningProcess) -> Date
     let isExpanded: Bool
     let expandedProcess: String?
     let onToggle: () -> Void
@@ -32,6 +33,7 @@ struct GroupRow: View {
                         isStale: isStale(process),
                         isExpanded: expandedProcess == process.id,
                         inGroup: true,
+                        idleSince: idleSince(process),
                         onToggleExpected: { onExpect(process) },
                         onToggle: { onToggleProcess(process.id) },
                         onKill: { await onKill(process) }

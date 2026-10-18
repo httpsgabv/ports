@@ -28,4 +28,22 @@ import Testing
         let now = node.startedAt.addingTimeInterval(age)
         #expect(node.isStale(now: now, threshold: 2 * 3600) == expected)
     }
+
+    @Test func activeProcessIsNeverStale() throws {
+        var node = try #require(all.first { $0.name == "node" })
+        node.inboundConnections = 1
+        #expect(!node.isStale(now: node.startedAt.addingTimeInterval(90_000), threshold: 7200))
+    }
+
+    @Test func idleCountsFromLastActivityNotFromStart() throws {
+        let node = try #require(all.first { $0.name == "node" })
+        let lastActive = node.startedAt.addingTimeInterval(10 * 3600)    // ativo 10h depois do start
+        let at = { (h: Double) in lastActive.addingTimeInterval(h * 3600) }
+        #expect(!node.isStale(now: at(1.9), threshold: 7200, lastActive: lastActive))
+        #expect(node.isStale(now: at(2), threshold: 7200, lastActive: lastActive))
+        #expect(node.idleSince(lastActive: lastActive) == lastActive)
+        #expect(node.idleSince(lastActive: nil) == node.startedAt)
+        // lastActive de um pid antigo (anterior ao start) não conta
+        #expect(node.idleSince(lastActive: node.startedAt.addingTimeInterval(-60)) == node.startedAt)
+    }
 }

@@ -55,9 +55,12 @@ func isStale(_ p: ListeningProcess) -> Bool     // now - idleSince ≥ threshold
 
 ## Success Criteria
 
-- [ ] Testes de parser, integração e stale verdes.
-- [ ] CPU ociosa re-medida < 1%.
-- [ ] Checklist manual da aba aberta/fechada.
+- [x] Testes de parser (conexões nunca viram portas; só entrada conta; pids sem LISTEN descartados), integração (connect + accept → 1; fecha → 0) e stale por idle verdes.
+- [x] CPU ociosa re-medida: filhos 20ms/tick (`lsof` com ESTABLISHED) + app 0,12% ≈ 0,5%.
+  - Com o **popover aberto**: app ~1,3% + filhos do scan completo ~1,7% ≈ 3%, só enquanto ele está aberto. Comparado com a versão anterior: o pico aparece nas duas, então não é regressão desta spec.
+- [x] Manual com um cliente `nc` segurando a conexão no lugar da aba do browser: `1 conn` → derrubar o cliente → `idle` em ≤ 5s; scan real confirma `inbound: 0`.
+- [ ] Com vite + aba real com HMR: não testado (o `nc` simula a mesma conexão TCP de entrada).
+- [ ] Âmbar 1h depois de ocioso: coberto por teste unitário com `now` injetado, não esperado na prática.
 
 ## Open Questions
 

@@ -21,6 +21,8 @@ final class PortStore {
     var isPopoverOpen = false
 
     private var isScanning = false
+    /// Última vez com conexão de entrada, por id. Só em memória (spec 09).
+    private var lastActive: [String: Date] = [:]
 
     private var partition: (active: [ListeningProcess], expected: [ListeningProcess]) {
         split(visible(all, showSystem: showSystem), expected: expectedKeys)
@@ -46,6 +48,9 @@ final class PortStore {
         do {
             all = try await scan(reusing: isPopoverOpen ? [] : all)   // nonisolated: fora da main thread
             lastError = nil
+            let now = Date.now
+            lastActive = lastActive.filter { id, _ in all.contains { $0.id == id } }
+            for p in all where p.inboundConnections > 0 { lastActive[p.id] = now }
         } catch {
             lastError = error.localizedDescription
         }
@@ -53,7 +58,11 @@ final class PortStore {
     }
 
     func isStale(_ process: ListeningProcess) -> Bool {
-        process.isStale(threshold: staleThreshold)
+        process.isStale(threshold: staleThreshold, lastActive: lastActive[process.id])
+    }
+
+    func idleSince(_ process: ListeningProcess) -> Date {
+        process.idleSince(lastActive: lastActive[process.id])
     }
 
     func isExpected(_ process: ListeningProcess) -> Bool {

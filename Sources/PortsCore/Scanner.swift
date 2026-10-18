@@ -5,7 +5,8 @@ import Foundation
 /// evitando 3 spawns (~85ms de CPU) por tick quando ninguém está olhando.
 // ponytail: ainda 1 spawn de lsof por tick (~34ms CPU); libproc zera isso se incomodar
 public func scan(reusing previous: [ListeningProcess] = []) async throws -> [ListeningProcess] {
-    let listen = parseLsofListen(try await run("/usr/sbin/lsof", ["-nP", "-iTCP", "-sTCP:LISTEN", "-Fpcn"]))
+    // LISTEN + ESTABLISHED no mesmo spawn: conexões de entrada = atividade (spec 09). ~+2ms de CPU.
+    let listen = parseLsofListen(try await run("/usr/sbin/lsof", ["-nP", "-iTCP", "-sTCP:LISTEN,ESTABLISHED", "-Fpcn"]))
     guard !listen.isEmpty else { return [] }
 
     // Containers vêm do PID do runtime: reconstrói a entrada do runtime para não repetir `ps` nele.
@@ -14,7 +15,7 @@ public func scan(reusing previous: [ListeningProcess] = []) async throws -> [Lis
     for p in previous where p.container == nil { known[p.pid] = p }
     let reused = listen.compactMap { pid, l in known[pid]?.with(ports: l.ports.sorted()) }
     let fresh = listen.filter { known[$0.key] == nil }
-    guard !fresh.isEmpty else { return await withContainers(reused.sortedByLowestPort()) }
+    guard !fresh.isEmpty else { return withConnections(await withContainers(reused.sortedByLowestPort()), listen) }
 
     let pids = fresh.keys.map(String.init).joined(separator: ",")
     async let details = run("/bin/ps", ["-o", "pid=,lstart=,%cpu=,rss=,comm=", "-p", pids])
@@ -27,5 +28,14 @@ public func scan(reusing previous: [ListeningProcess] = []) async throws -> [Lis
         commands: parsePsCommand(try await commands),
         cwds: parseLsofCwd(try await cwds)
     )
-    return await withContainers((reused + new).sortedByLowestPort())
+    return withConnections(await withContainers((reused + new).sortedByLowestPort()), listen)
+}
+
+/// Depois da expansão em containers: cada entrada conta só as conexões das próprias portas.
+func withConnections(_ processes: [ListeningProcess], _ listen: [Int32: LsofEntry]) -> [ListeningProcess] {
+    processes.map { p in
+        var copy = p
+        copy.inboundConnections = listen[p.pid]?.inbound.filter(p.ports.contains).count ?? 0
+        return copy
+    }
 }

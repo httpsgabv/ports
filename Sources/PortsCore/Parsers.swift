@@ -7,27 +7,39 @@ struct PsDetails: Equatable {
     let executablePath: String
 }
 
-/// `lsof -nP -iTCP -sTCP:LISTEN -Fpcn`
-func parseLsofListen(_ out: String) -> [Int32: (name: String, ports: Set<UInt16>)] {
-    var result: [Int32: (name: String, ports: Set<UInt16>)] = [:]
+typealias LsofEntry = (name: String, ports: Set<UInt16>, inbound: [UInt16])
+
+/// `lsof -nP -iTCP -sTCP:LISTEN,ESTABLISHED -Fpcn`. Linhas com `->` são conexões (`local->remoto`):
+/// nunca viram portas; contam como entrada quando a porta local é uma das portas em LISTEN do pid.
+/// Pids sem nenhum LISTEN (browser, nc) são descartados.
+func parseLsofListen(_ out: String) -> [Int32: LsofEntry] {
+    var result: [Int32: LsofEntry] = [:]
     var pid: Int32?
+    func port(_ address: Substring) -> UInt16? {
+        address.lastIndex(of: ":").flatMap { UInt16(address[address.index(after: $0)...]) }
+    }
     for line in out.split(separator: "\n") {
         let value = line.dropFirst()
         switch line.first {
         case "p":
             pid = Int32(value)
-            if let pid, result[pid] == nil { result[pid] = ("", []) }
+            if let pid, result[pid] == nil { result[pid] = ("", [], []) }
         case "c":
             if let pid { result[pid]?.name = String(value) }
         case "n":
-            if let pid, let colon = value.lastIndex(of: ":"), let port = UInt16(value[value.index(after: colon)...]) {
-                result[pid]?.ports.insert(port)
+            guard let pid else { break }
+            if let arrow = value.range(of: "->") {
+                if let local = port(value[..<arrow.lowerBound]) { result[pid]?.inbound.append(local) }
+            } else if let listening = port(value) {
+                result[pid]?.ports.insert(listening)
             }
         default:
             break
         }
     }
-    return result
+    return result.compactMapValues { entry in
+        entry.ports.isEmpty ? nil : (entry.name, entry.ports, entry.inbound.filter(entry.ports.contains))
+    }
 }
 
 /// `ps -o pid=,lstart=,%cpu=,rss=,comm=` (com LC_ALL=C)
@@ -81,7 +93,7 @@ func isSystemPath(_ path: String) -> Bool {
 }
 
 func merge(
-    listen: [Int32: (name: String, ports: Set<UInt16>)],
+    listen: [Int32: LsofEntry],
     details: [Int32: PsDetails],
     commands: [Int32: String],
     cwds: [Int32: String],

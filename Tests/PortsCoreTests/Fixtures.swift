@@ -62,4 +62,37 @@ enum Fixture {
     n/
 
     """
+
+    // `lsof -nP -iTCP -sTCP:LISTEN,ESTABLISHED -Fpcn` real (17/out), + um node com conexão de saída.
+    static let lsofTCP = """
+    p620
+    crapportd
+    f10
+    n*:58996
+    f20
+    n172.20.10.11:58996->172.20.10.1:58465
+    p671
+    cidentityservicesd
+    f12
+    n172.20.10.11:61000->17.57.146.20:5223
+    p900
+    cnode
+    f20
+    n[::1]:3000
+    f21
+    n127.0.0.1:60001->127.0.0.1:5432
+    p7359
+    cPython
+    f3
+    n127.0.0.1:8781
+    f4
+    n127.0.0.1:8781->127.0.0.1:64384
+    f5
+    n127.0.0.1:8781->127.0.0.1:64390
+    p7373
+    cnc
+    f3
+    n127.0.0.1:64384->127.0.0.1:8781
+
+    """
 }

@@ -139,6 +139,7 @@ struct RootView: View {
                         isStale: false,
                         isExpanded: expanded == process.id,
                         isExpected: true,
+                        idleSince: store.idleSince(process),
                         onToggleExpected: { store.setExpected([process], false) },
                         onToggle: { toggle(process.id) },
                         onKill: { await kill(process) }
@@ -157,6 +158,7 @@ struct RootView: View {
                 process: process,
                 isStale: store.isStale(process),
                 isExpanded: expanded == process.id,
+                idleSince: store.idleSince(process),
                 onToggleExpected: { store.setExpected([process], true) },
                 onToggle: { toggle(process.id) },
                 onKill: { await kill(process) }
@@ -165,6 +167,7 @@ struct RootView: View {
             GroupRow(
                 group: group,
                 isStale: store.isStale,
+                idleSince: store.idleSince,
                 isExpanded: expandedGroup == group.id,
                 expandedProcess: expanded,
                 onToggle: {

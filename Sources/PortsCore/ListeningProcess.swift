@@ -25,6 +25,8 @@ public struct ListeningProcess: Identifiable, Hashable, Sendable {
     public internal(set) var project: Project? = nil   // nil quando não há cwd
     public internal(set) var kind: String? = nil       // "VITE", "NEXT"…; nil = usar `name`
     public internal(set) var container: Container? = nil
+    /// Conexões TCP de entrada estabelecidas nas portas deste processo/container (aba com HMR, app no banco…).
+    public internal(set) var inboundConnections: Int = 0
 
     public var title: String { kind ?? name }
 
@@ -34,7 +36,12 @@ public struct ListeningProcess: Identifiable, Hashable, Sendable {
         return copy
     }
 
-    public func isStale(now: Date = .now, threshold: TimeInterval) -> Bool {
-        now.timeIntervalSince(startedAt) >= threshold
+    /// Esquecido = **ocioso** há `threshold`: sem conexões de entrada desde `lastActive` (ou desde o start).
+    public func isStale(now: Date = .now, threshold: TimeInterval, lastActive: Date? = nil) -> Bool {
+        inboundConnections == 0 && now.timeIntervalSince(idleSince(lastActive: lastActive)) >= threshold
+    }
+
+    public func idleSince(lastActive: Date?) -> Date {
+        max(lastActive ?? startedAt, startedAt)
     }
 }

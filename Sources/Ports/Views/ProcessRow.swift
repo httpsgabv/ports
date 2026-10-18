@@ -8,6 +8,7 @@ struct ProcessRow: View {
     let isExpanded: Bool
     var inGroup = false   // filho de um GroupRow: indentado e sem repetir o projeto
     var isExpected = false
+    var idleSince: Date?   // nil = desde o start (spec 09)
     var onToggleExpected: (() -> Void)?
     let onToggle: () -> Void
     let onKill: () async -> KillResult
@@ -17,6 +18,19 @@ struct ProcessRow: View {
     @State private var error: String?
 
     private var uptime: String { formatUptime(Date.now.timeIntervalSince(process.startedAt)) }
+    private var idle: String { formatUptime(Date.now.timeIntervalSince(idleSince ?? process.startedAt)) }
+    private var activityLabel: String {
+        process.inboundConnections > 0 ? "\(process.inboundConnections) conn" : "idle \(idle)"
+    }
+
+    /// `up 3h 05m · idle 2h` (âmbar se stale) ou `up 3h 05m · 2 conn`.
+    private var activity: some View {
+        HStack(spacing: 0) {
+            Text("up \(uptime) · ")
+            Text(activityLabel).foregroundStyle(isStale ? Theme.stale : Theme.textSecondary)
+        }
+        .fixedSize()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -34,7 +48,7 @@ struct ProcessRow: View {
                     .font(Theme.font(13, .medium))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
-                    .accessibilityLabel("\(process.title), ports \(process.ports.map(String.init).joined(separator: ", ")), up \(uptime)")
+                    .accessibilityLabel("\(process.title), ports \(process.ports.map(String.init).joined(separator: ", ")), up \(uptime), \(activityLabel)")
                 Spacer(minLength: 8)
                 ForEach(process.ports, id: \.self) { PortChip(port: $0) }
                 killButton
@@ -77,9 +91,9 @@ struct ProcessRow: View {
                 Text("\(container.name) · \(container.image.split(separator: "/").last ?? "") · ")
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(uptime).foregroundStyle(isStale ? Theme.stale : Theme.textSecondary).fixedSize()
+                activity
             } else {
-                Text(uptime).foregroundStyle(isStale ? Theme.stale : Theme.textSecondary)
+                activity
                 Text(" · \(formatCPU(process.cpuPercent)) · \(formatBytes(process.memoryBytes))")
                     .fixedSize()
             }
