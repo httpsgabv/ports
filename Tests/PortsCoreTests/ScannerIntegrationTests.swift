@@ -32,6 +32,19 @@ import Testing
         #expect(me.ports.contains(port))   // portas sempre do lsof atual
     }
 
+    @Test func runTimesOut() async {
+        let start = ContinuousClock.now
+        await #expect(throws: ShellError.self) {
+            try await run("/bin/sleep", ["5"], timeout: .milliseconds(200))
+        }
+        #expect(ContinuousClock.now - start < .seconds(1))
+    }
+
+    @Test func runPassesHomeForDocker() async throws {
+        let home = try await run("/bin/sh", ["-c", "echo $HOME"])
+        #expect(home.trimmingCharacters(in: .whitespacesAndNewlines) == NSHomeDirectory())
+    }
+
     @Test func runThrowsForMissingBinary() async {
         await #expect(throws: ShellError.self) {
             try await run("/nonexistent/bin", [])

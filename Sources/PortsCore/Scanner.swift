@@ -8,10 +8,13 @@ public func scan(reusing previous: [ListeningProcess] = []) async throws -> [Lis
     let listen = parseLsofListen(try await run("/usr/sbin/lsof", ["-nP", "-iTCP", "-sTCP:LISTEN", "-Fpcn"]))
     guard !listen.isEmpty else { return [] }
 
-    let known = Dictionary(previous.map { ($0.pid, $0) }, uniquingKeysWith: { a, _ in a })
+    // Containers vêm do PID do runtime: reconstrói a entrada do runtime para não repetir `ps` nele.
+    var known: [Int32: ListeningProcess] = [:]
+    for p in previous where p.container != nil { known[p.pid] = known[p.pid] ?? p.runtimeBase }
+    for p in previous where p.container == nil { known[p.pid] = p }
     let reused = listen.compactMap { pid, l in known[pid]?.with(ports: l.ports.sorted()) }
     let fresh = listen.filter { known[$0.key] == nil }
-    guard !fresh.isEmpty else { return reused.sortedByLowestPort() }
+    guard !fresh.isEmpty else { return await withContainers(reused.sortedByLowestPort()) }
 
     let pids = fresh.keys.map(String.init).joined(separator: ",")
     async let details = run("/bin/ps", ["-o", "pid=,lstart=,%cpu=,rss=,comm=", "-p", pids])
@@ -24,5 +27,5 @@ public func scan(reusing previous: [ListeningProcess] = []) async throws -> [Lis
         commands: parsePsCommand(try await commands),
         cwds: parseLsofCwd(try await cwds)
     )
-    return (reused + new).sortedByLowestPort()
+    return await withContainers((reused + new).sortedByLowestPort())
 }

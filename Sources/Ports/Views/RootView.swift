@@ -6,7 +6,7 @@ private let log = Logger(subsystem: "dev.gabriel.ports", category: "kill")
 
 struct RootView: View {
     @Environment(PortStore.self) private var store
-    @State private var expanded: Int32?
+    @State private var expanded: String?
     @State private var expandedGroup: String?
     @State private var showExpected = false
     @State private var listHeight: CGFloat = 0
@@ -137,10 +137,10 @@ struct RootView: View {
                     ProcessRow(
                         process: process,
                         isStale: false,
-                        isExpanded: expanded == process.pid,
+                        isExpanded: expanded == process.id,
                         isExpected: true,
                         onToggleExpected: { store.setExpected([process], false) },
-                        onToggle: { toggle(process.pid) },
+                        onToggle: { toggle(process.id) },
                         onKill: { await kill(process) }
                     )
                     .opacity(0.55)
@@ -156,9 +156,9 @@ struct RootView: View {
             ProcessRow(
                 process: process,
                 isStale: store.isStale(process),
-                isExpanded: expanded == process.pid,
+                isExpanded: expanded == process.id,
                 onToggleExpected: { store.setExpected([process], true) },
-                onToggle: { toggle(process.pid) },
+                onToggle: { toggle(process.id) },
                 onKill: { await kill(process) }
             )
         } else {
@@ -181,29 +181,29 @@ struct RootView: View {
         }
     }
 
-    private func toggle(_ pid: Int32) {
+    private func toggle(_ id: String) {
         withAnimation(.easeOut(duration: 0.15)) {
-            expanded = expanded == pid ? nil : pid
+            expanded = expanded == id ? nil : id
         }
     }
 
     private func kill(_ process: ListeningProcess) async -> KillResult {
-        log.notice("kill pid=\(process.pid) \(process.title, privacy: .public)")
+        log.notice("kill \(process.id, privacy: .public) \(process.title, privacy: .public)")
         let result = await terminate(process)
-        log.notice("kill pid=\(process.pid) -> \(String(describing: result), privacy: .public)")
+        log.notice("kill \(process.id, privacy: .public) -> \(String(describing: result), privacy: .public)")
         if case .failed = result { return result }
-        withAnimation(.easeOut(duration: 0.2)) { store.remove(process.pid) }
+        withAnimation(.easeOut(duration: 0.2)) { store.remove(process.id) }
         await store.refresh()
         return result
     }
 
     private func killAll(_ group: ProcessGroup) async -> [KillResult] {
-        log.notice("killAll \(group.id, privacy: .public) pids=\(group.processes.map(\.pid), privacy: .public)")
+        log.notice("killAll \(group.id, privacy: .public) ids=\(group.processes.map(\.id), privacy: .public)")
         let results = await terminateAll(group.processes)
         log.notice("killAll \(group.id, privacy: .public) -> \(String(describing: results), privacy: .public)")
         withAnimation(.easeOut(duration: 0.2)) {
             for (process, result) in zip(group.processes, results) where result.failure == nil {
-                store.remove(process.pid)
+                store.remove(process.id)
             }
         }
         await store.refresh()

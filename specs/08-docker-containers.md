@@ -8,9 +8,9 @@ Um Postgres ou Redis rodando em Docker hoje é **invisível**. A porta pertence 
 
 ## Detecção (só paga quando há Docker)
 
-1. O `lsof` de LISTEN encontra um processo cujo executável é de um runtime conhecido: `com.docker.backend` (Docker Desktop), `OrbStack Helper` (OrbStack) ou `limactl`/`ssh` com cwd em `~/.colima` / `~/.lima` (Colima/Lima).
-2. Só então roda:
-   `docker ps --format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.CreatedAt}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.project.working_dir"}}'`
+1. O `lsof` de LISTEN encontra um processo cujo **nome** (campo `c`, que vem completo) é de um runtime conhecido: `com.docker.backend` (Docker Desktop), `OrbStack Helper` (OrbStack) ou `limactl` (Colima/Lima). Não precisa de `ps`.
+2. Só então roda, **a cada tick** (os containers mudam sem o PID do runtime mudar; custo medido em 17/out: 10ms de CPU por chamada ≈ 0,2%):
+   `docker ps --format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.CreatedAt}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.project.working_dir"}}\t{{.Label "com.supabase.cli.workdir"}}'`
 3. O binário `docker` é procurado em `/usr/local/bin`, `/opt/homebrew/bin` e `~/.orbstack/bin`. Se não achar ou o daemon estiver parado → nenhuma mudança (o runtime continua como processo de sistema).
 4. **`run()` precisa repassar `HOME`** para o `docker` achar o contexto (`~/.docker`). Hoje o environment só tem `LC_ALL`.
 
@@ -29,7 +29,7 @@ public let container: Container?
 ```
 
 - Cada container com porta publicada (`0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp` → host port 5432) vira um `ListeningProcess` próprio: `pid` = PID do runtime, `kind` = nome da imagem sem tag e em caixa alta (`POSTGRES`), `isSystem = false`, `startedAt` = `CreatedAt`, cpu e mem vazios.
-- **Projeto:** se tiver label compose, `Project(root: working_dir, name: project)`, o que agrupa o container com o `next dev` do mesmo repo. Senão, sem projeto.
+- **Projeto:** pasta = `com.docker.compose.project.working_dir`, senão `com.supabase.cli.workdir` (a CLI do Supabase não define `working_dir`, mas define essa). A pasta passa pelo mesmo `resolveProject` da spec 06, o que agrupa o container com o `next dev`/`vite` do mesmo repo. Exemplo real: os 10 containers `supabase_*_yt-city` se juntam ao grupo `yt-city`. Sem pasta → sem projeto.
 - Portas do runtime que não batem com nenhum container ficam no processo do runtime, que continua `isSystem`.
 
 ## Controle
@@ -53,7 +53,7 @@ public let container: Container?
 ## Testing Strategy
 
 - **Unit:** parser do `docker ps` (portas IPv4/IPv6, várias portas, faixas `8000-8001->…`, sem portas, labels vazias); merge runtime → containers (porta sem container fica no runtime).
-- **Integração** (pulada se `docker` não responder): subir `nginx:alpine` em porta efêmera, `scan()` acha o container, `terminate` para o container.
+- **Integração** (pulada se `docker` não responder): subir `caddy:2-alpine` (já existe localmente; nenhum download) numa porta fixa de teste, `scan()` acha o container, `terminate` para o container.
 - **Manual:** compose real com app + db.
 
 ## Boundaries
@@ -63,8 +63,11 @@ public let container: Container?
 
 ## Success Criteria
 
-- [ ] Testes de parser e merge verdes; integração verde com Docker rodando.
-- [ ] Checklist manual (run, compose, stop, Docker fechado).
+- [x] Testes de parser e merge verdes; integração verde com Docker rodando (`caddy:2-alpine`: aparece, sobrevive ao reuso, `docker stop` derruba).
+- [x] Manual: `CADDY :8795 :8796` com ícone de caixa; `×` → log `kill c:… -> terminated` em ~270ms, container removido, runtime do Docker intacto.
+- [x] Custo ocioso com Docker: filhos 32ms/tick (`lsof` + `docker ps`) + app 0,08% ≈ 0,73%.
+- [ ] Compose/Supabase agrupando com o app do repo: coberto por teste unitário, não verificado com a stack real.
+- [ ] Docker Desktop fechado → nenhum `docker ps`: garantido pelo guard (só roda com runtime escutando), não verificado na prática.
 
 ## Open Questions
 

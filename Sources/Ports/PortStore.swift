@@ -65,7 +65,7 @@ final class PortStore {
         if expected { expectedKeys.formUnion(keys) } else { expectedKeys.subtract(keys) }
     }
 
-    func remove(_ pid: Int32) {
-        all.removeAll { $0.pid == pid }
+    func remove(_ id: String) {
+        all.removeAll { $0.id == id }
     }
 }

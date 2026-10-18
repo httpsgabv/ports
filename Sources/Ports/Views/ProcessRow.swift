@@ -21,7 +21,15 @@ struct ProcessRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
-                Circle().fill(Theme.live).frame(width: 6, height: 6)
+                if process.container != nil {
+                    Image(systemName: "shippingbox")
+                        .font(.system(size: 8, weight: .light))
+                        .foregroundStyle(Theme.live)
+                        .frame(width: 6, height: 6)
+                        .accessibilityLabel("Docker container")
+                } else {
+                    Circle().fill(Theme.live).frame(width: 6, height: 6)
+                }
                 Text(process.title)
                     .font(Theme.font(13, .medium))
                     .foregroundStyle(Theme.textPrimary)
@@ -65,9 +73,16 @@ struct ProcessRow: View {
                     .truncationMode(.middle)
                 Text(" · ")
             }
-            Text(uptime).foregroundStyle(isStale ? Theme.stale : Theme.textSecondary)
-            Text(" · \(formatCPU(process.cpuPercent)) · \(formatBytes(process.memoryBytes))")
-                .fixedSize()
+            if let container = process.container {
+                Text("\(container.name) · \(container.image.split(separator: "/").last ?? "") · ")
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(uptime).foregroundStyle(isStale ? Theme.stale : Theme.textSecondary).fixedSize()
+            } else {
+                Text(uptime).foregroundStyle(isStale ? Theme.stale : Theme.textSecondary)
+                Text(" · \(formatCPU(process.cpuPercent)) · \(formatBytes(process.memoryBytes))")
+                    .fixedSize()
+            }
         }
         .font(Theme.font(11))
         .foregroundStyle(Theme.textSecondary)
@@ -76,7 +91,8 @@ struct ProcessRow: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("PID \(String(process.pid))" + (process.cwd.map { " · " + abbreviateHome($0) } ?? ""))
+            Text((process.container.map { "CONTAINER \($0.id)" } ?? "PID \(String(process.pid))")
+                 + (process.cwd.map { " · " + abbreviateHome($0) } ?? ""))
                 .font(Theme.font(11))
                 .foregroundStyle(Theme.textTertiary)
                 .lineLimit(1)

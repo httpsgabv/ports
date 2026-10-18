@@ -6,9 +6,9 @@ struct GroupRow: View {
     let group: ProcessGroup
     let isStale: (ListeningProcess) -> Bool
     let isExpanded: Bool
-    let expandedProcess: Int32?
+    let expandedProcess: String?
     let onToggle: () -> Void
-    let onToggleProcess: (Int32) -> Void
+    let onToggleProcess: (String) -> Void
     let onKill: (ListeningProcess) async -> KillResult
     let onKillAll: () async -> [KillResult]
     let onExpect: (ListeningProcess) -> Void
@@ -30,10 +30,10 @@ struct GroupRow: View {
                     ProcessRow(
                         process: process,
                         isStale: isStale(process),
-                        isExpanded: expandedProcess == process.pid,
+                        isExpanded: expandedProcess == process.id,
                         inGroup: true,
                         onToggleExpected: { onExpect(process) },
-                        onToggle: { onToggleProcess(process.pid) },
+                        onToggle: { onToggleProcess(process.id) },
                         onKill: { await onKill(process) }
                     )
                 }

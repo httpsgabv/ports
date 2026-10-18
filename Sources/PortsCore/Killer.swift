@@ -14,7 +14,9 @@ public enum KillResult: Equatable, Sendable {
 }
 
 /// SIGTERM, espera `grace`, depois SIGKILL. Só sinaliza se o pid ainda é o mesmo processo listado.
+/// Container → `docker stop`.
 public func terminate(_ process: ListeningProcess, grace: Duration = .seconds(3)) async -> KillResult {
+    if let container = process.container { return await stopContainer(container) }   // nunca sinaliza o runtime
     let pid = process.pid
     guard pid > 1, pid != getpid() else { return .failed("refused") }
     guard let started = await startTime(of: pid) else { return .alreadyGone }

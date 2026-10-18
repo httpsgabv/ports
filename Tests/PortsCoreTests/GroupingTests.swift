@@ -17,7 +17,7 @@ import Testing
             p(4, 8000, root: nil),
             p(5, 9000, root: "/dev/yt-city", mem: 30),
         ])
-        #expect(groups.map(\.id) == ["/dev/site", "/dev/yt-city", "pid:4"])
+        #expect(groups.map(\.id) == ["/dev/site", "/dev/yt-city", "id:4"])
         let yt = groups[1]
         #expect(yt.processes.map(\.pid) == [2, 3, 5])
         #expect(yt.project?.name == "yt-city")
