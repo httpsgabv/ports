@@ -22,7 +22,7 @@ Persistido em `UserDefaults` (`expectedKeys: [String]`), lido e gravado pelo `Po
 
 - **Marcar:** ação `EXPECT` na linha expandida (e na linha de grupo, que marca todos os filhos).
 - **Efeito:** não conta no ícone, nunca fica âmbar, sai do total do header (spec 10).
-- **Lista:** seção no fim do popover: `EXPECTED · 2` colapsada por padrão. Expandida, mostra as linhas em `textTertiary`, com ação `UNEXPECT` e o `×` normal.
+- **Lista:** seção no fim do popover: `EXPECTED · 2` colapsada por padrão. Expandida, mostra as linhas esmaecidas (opacidade 0.55), com ação `UNEXPECT` e o `×` normal.
 - **Precedência:** o filtro de sistema vem primeiro. Um processo de sistema escondido não aparece nem em `EXPECTED`.
 - Chaves de processos que não estão rodando ficam guardadas, sem limpeza automática (lista pequena; YAGNI).
 
@@ -44,8 +44,9 @@ Persistido em `UserDefaults` (`expectedKeys: [String]`), lido e gravado pelo `Po
 
 ## Success Criteria
 
-- [ ] Testes de chave e partição verdes.
-- [ ] Checklist manual com persistência verificada via `defaults read`.
+- [x] Testes de chave e partição verdes.
+- [x] Persistência verificada via `defaults read`: EXPECT grava a chave; ela sobrevive ao restart do app e do processo (o novo PID gera a mesma chave, checado no scan real); UNEXPECT esvazia a lista.
+- [ ] Contador do ícone caindo ao marcar: só observável na tela, não conferido por mim.
 
 ## Open Questions
 

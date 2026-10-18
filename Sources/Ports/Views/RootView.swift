@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(PortStore.self) private var store
     @State private var expanded: Int32?
     @State private var expandedGroup: String?
+    @State private var showExpected = false
     @State private var listHeight: CGFloat = 0
     @State private var showingPreferences = false
 
@@ -31,7 +32,7 @@ struct RootView: View {
         VStack(spacing: 0) {
             header
             hairline
-            if store.processes.isEmpty {
+            if store.processes.isEmpty && store.expectedProcesses.isEmpty {
                 CapsLabel("No open ports")
                     .frame(maxWidth: .infinity, minHeight: 120)
             } else {
@@ -56,9 +57,16 @@ struct RootView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 let groups = groupByProject(store.processes)
+                if groups.isEmpty {
+                    CapsLabel("No open ports").frame(maxWidth: .infinity, minHeight: 60)
+                }
                 ForEach(groups) { group in
                     row(for: group).transition(.opacity)
                     if group.id != groups.last?.id { hairline }
+                }
+                if !store.expectedProcesses.isEmpty {
+                    hairline
+                    expectedSection
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { listHeight = $0 }
@@ -103,6 +111,45 @@ struct RootView: View {
         Rectangle().fill(Theme.border).frame(height: Theme.hairline)
     }
 
+    /// Processos esperados: fora do contador e do âmbar, mas visíveis e matáveis.
+    private var expectedSection: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) { showExpected.toggle() }
+            } label: {
+                HStack {
+                    CapsLabel("Expected · \(store.expectedProcesses.count)")
+                    Spacer()
+                    Image(systemName: showExpected ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .light))
+                        .foregroundStyle(Theme.textTertiary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())   // .plain só clica em pixels opacos
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(store.expectedProcesses.count) expected processes")
+
+            if showExpected {
+                ForEach(store.expectedProcesses) { process in
+                    hairline
+                    ProcessRow(
+                        process: process,
+                        isStale: false,
+                        isExpanded: expanded == process.pid,
+                        isExpected: true,
+                        onToggleExpected: { store.setExpected([process], false) },
+                        onToggle: { toggle(process.pid) },
+                        onKill: { await kill(process) }
+                    )
+                    .opacity(0.55)
+                }
+                .transition(.opacity)
+            }
+        }
+    }
+
     @ViewBuilder
     private func row(for group: ProcessGroup) -> some View {
         if group.processes.count == 1, let process = group.processes.first {
@@ -110,6 +157,7 @@ struct RootView: View {
                 process: process,
                 isStale: store.isStale(process),
                 isExpanded: expanded == process.pid,
+                onToggleExpected: { store.setExpected([process], true) },
                 onToggle: { toggle(process.pid) },
                 onKill: { await kill(process) }
             )
@@ -126,7 +174,9 @@ struct RootView: View {
                 },
                 onToggleProcess: toggle,
                 onKill: kill,
-                onKillAll: { await killAll(group) }
+                onKillAll: { await killAll(group) },
+                onExpect: { store.setExpected([$0], true) },
+                onExpectAll: { store.setExpected(group.processes, true) }
             )
         }
     }

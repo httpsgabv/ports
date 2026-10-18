@@ -7,6 +7,8 @@ struct ProcessRow: View {
     let isStale: Bool
     let isExpanded: Bool
     var inGroup = false   // filho de um GroupRow: indentado e sem repetir o projeto
+    var isExpected = false
+    var onToggleExpected: (() -> Void)?
     let onToggle: () -> Void
     let onKill: () async -> KillResult
 
@@ -91,6 +93,10 @@ struct ProcessRow: View {
                 }
                 if let cwd = process.cwd {
                     ActionButton(title: "Finder") { revealInFinder(cwd) }
+                }
+                if let onToggleExpected {
+                    ActionButton(title: isExpected ? "Unexpect" : "Expect", action: onToggleExpected)
+                        .help(isExpected ? "Count and highlight this process again" : "Don't count or highlight this process")
                 }
             }
             .padding(.top, 2)

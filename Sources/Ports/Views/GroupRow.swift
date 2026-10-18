@@ -11,6 +11,8 @@ struct GroupRow: View {
     let onToggleProcess: (Int32) -> Void
     let onKill: (ListeningProcess) async -> KillResult
     let onKillAll: () async -> [KillResult]
+    let onExpect: (ListeningProcess) -> Void
+    let onExpectAll: () -> Void
 
     @State private var hovering = false
     @State private var killing = false
@@ -30,6 +32,7 @@ struct GroupRow: View {
                         isStale: isStale(process),
                         isExpanded: expandedProcess == process.pid,
                         inGroup: true,
+                        onToggleExpected: { onExpect(process) },
                         onToggle: { onToggleProcess(process.pid) },
                         onKill: { await onKill(process) }
                     )
@@ -70,6 +73,13 @@ struct GroupRow: View {
             .foregroundStyle(Theme.textSecondary)
             .padding(.leading, 14)
             .accessibilityHidden(true)
+
+            if isExpanded {
+                ActionButton(title: "Expect all", action: onExpectAll)
+                    .help("Don't count or highlight these processes")
+                    .padding(.leading, 14)
+                    .padding(.top, 2)
+            }
 
             if let error {
                 Text(error)
