@@ -33,7 +33,13 @@ final class PortStore {
     private var lastActive: [String: Date] = [:]
 
     private var partition: (active: [ListeningProcess], expected: [ListeningProcess]) {
-        split(visible(all, showSystem: showSystem), expected: expectedKeys)
+        split(visible(all, showSystem: showSystem).filter(inDemoRoot), expected: expectedKeys)
+    }
+
+    /// Só para os screenshots do README: `PORTS_DEMO_ROOT=<pasta>` mostra apenas processos sob essa pasta.
+    private let demoRoot = ProcessInfo.processInfo.environment["PORTS_DEMO_ROOT"]
+    private func inDemoRoot(_ p: ListeningProcess) -> Bool {
+        demoRoot.map { (p.cwd ?? "").hasPrefix($0) } ?? true
     }
     /// Visíveis e não esperados: o que conta no ícone e pode ficar âmbar.
     var processes: [ListeningProcess] { partition.active }

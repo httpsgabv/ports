@@ -49,6 +49,7 @@ struct ProcessRow: View {
                     .font(Theme.font(13, .medium))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
+                    .layoutPriority(1)   // o nome é o que importa: chips e rótulos encolhem antes
                     .accessibilityLabel("\(process.title), ports \(process.ports.map(String.init).joined(separator: ", ")), up \(uptime), \(activityLabel)")
                 Spacer(minLength: 8)
                 if process.isExposed { LanChip() }
