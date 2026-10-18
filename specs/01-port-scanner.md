@@ -36,7 +36,10 @@ public func scan() async throws -> [ListeningProcess]   // ordenado por menor po
 
 `ps` do macOS **não** tem `etimes`: usar `lstart` com `DateFormatter` `en_US_POSIX`, formato `EEE MMM d HH:mm:ss yyyy`.
 
-**Classificação `isSystem`:** `executablePath` começa com `/System/`, `/usr/libexec/`, `/usr/sbin/`, `/sbin/` **ou** `/Applications/` (apps GUI tipo Raycast, Logi Options+ não são "projetos"). Caminhos relativos (`node`, `python3`) e `/usr/bin/`, `/opt/homebrew/`, `/usr/local/` → usuário.
+**Classificação `isSystem`:** `executablePath` contém `.app/Contents/` (qualquer app/agente GUI, ex: Raycast, `~/Library/.../FigmaAgent.app`, `/Library/.../logioptionsplus_agent.app`) **ou** começa com `/System/`, `/usr/libexec/`, `/usr/sbin/`, `/sbin/`. Caminhos relativos (`node`, `python3`) e `/usr/bin/`, `/opt/homebrew/`, `/usr/local/` → usuário.
+Exceção: `.app` dentro de `.framework/` (Python oficial/Homebrew roda de `Python.framework/.../Python.app/Contents/MacOS/Python`) ou de `/node_modules/` (Electron em dev) → usuário.
+
+**cwd:** `/` é tratado como `nil` (daemons e agentes; não identifica projeto).
 
 ## Acceptance criteria
 
@@ -60,9 +63,9 @@ public func scan() async throws -> [ListeningProcess]   // ordenado por menor po
 
 ## Success Criteria
 
-- [ ] `swift test --filter Scanner` verde.
-- [ ] Com `python3 -m http.server 8765` rodando de `~/tmp/x`, `scan()` retorna `python3`, `[8765]`, `cwd == ~/tmp/x`, `isSystem == false`.
-- [ ] `ControlCenter` e `rapportd` vêm com `isSystem == true`.
+- [x] `swift test` verde (parsers + integração com socket real).
+- [x] Com `python3 -m http.server 8765` rodando de `~/tmp/x`, `scan()` retorna `python3`, `[8765]`, `cwd == ~/tmp/x`, `isSystem == false`.
+- [x] `ControlCenter` e `rapportd` vêm com `isSystem == true`.
 
 ## Open Questions
 
