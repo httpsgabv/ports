@@ -7,8 +7,13 @@ final class PortStore {
     private(set) var all: [ListeningProcess] = []
     private(set) var lastError: String?
     private(set) var lastScan: Date?
-    var showSystem = false
-    var staleThreshold: TimeInterval = 2 * 3600
+    var showSystem = UserDefaults.standard.bool(forKey: "showSystem") {
+        didSet { UserDefaults.standard.set(showSystem, forKey: "showSystem") }
+    }
+    var staleHours = UserDefaults.standard.object(forKey: "staleHours") as? Int ?? 2 {
+        didSet { UserDefaults.standard.set(staleHours, forKey: "staleHours") }
+    }
+    var staleThreshold: TimeInterval { TimeInterval(staleHours) * 3600 }
     /// Aberto: scan completo (cpu/mem ao vivo). Fechado: só portas + pids novos (contador barato).
     var isPopoverOpen = false
 

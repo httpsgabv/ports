@@ -38,7 +38,8 @@ Três ajustes, persistidos, sem janela separada: a tela de preferências substit
 
 ## Success Criteria
 
-- [ ] Checklist manual completo, incluindo um ciclo real de logout/login.
+- [x] Checklist manual: stale, show system, persistência após quit, launch at login em Login Items.
+- [ ] Ciclo real de logout/login: ainda não verificado.
 
 ## Open Questions
 

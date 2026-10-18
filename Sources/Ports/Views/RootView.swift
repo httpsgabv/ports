@@ -5,8 +5,25 @@ struct RootView: View {
     @Environment(PortStore.self) private var store
     @State private var expanded: Int32?
     @State private var listHeight: CGFloat = 0
+    @State private var showingPreferences = false
 
     var body: some View {
+        Group {
+            if showingPreferences {
+                PreferencesView { showingPreferences = false }
+            } else {
+                main
+            }
+        }
+        .frame(width: Theme.width)
+        .background(Theme.bg)
+        .preferredColorScheme(.dark)
+        .onAppear { store.isPopoverOpen = true }
+        .onDisappear { store.isPopoverOpen = false }
+        .task { await store.refresh() }
+    }
+
+    private var main: some View {
         VStack(spacing: 0) {
             header
             hairline
@@ -19,12 +36,6 @@ struct RootView: View {
             hairline
             footer
         }
-        .frame(width: Theme.width)
-        .background(Theme.bg)
-        .preferredColorScheme(.dark)
-        .onAppear { store.isPopoverOpen = true }
-        .onDisappear { store.isPopoverOpen = false }
-        .task { await store.refresh() }
     }
 
     private var header: some View {
@@ -68,6 +79,16 @@ struct RootView: View {
                 }
             }
             Spacer()
+            Button { showingPreferences = true } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 11, weight: .light))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(",")
+            .help("Preferences")
+            .accessibilityLabel("Preferences")
+            .padding(.trailing, 12)
             Button { NSApp.terminate(nil) } label: {
                 CapsLabel("Quit", color: Theme.textSecondary)
             }
