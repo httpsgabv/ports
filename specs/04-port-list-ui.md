@@ -60,9 +60,10 @@ O popover que aparece ao clicar no ícone: em um olhar, saber **o que** está ro
 
 ## Success Criteria
 
-- [ ] Formatadores testados.
-- [ ] Checklist visual e de interação ok.
-- [ ] Screenshot do popover aprovado por mim.
+- [x] Formatadores testados.
+- [x] Checklist visual e de interação ok (visual, expandir, portas, Finder, kill com SIGTERM e com escalonamento).
+- [x] Popover aprovado por mim.
+- [ ] VoiceOver e Esc para fechar: ainda não verificados.
 
 ## Open Questions
 
