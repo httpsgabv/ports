@@ -15,7 +15,7 @@ public func scan(reusing previous: [ListeningProcess] = []) async throws -> [Lis
     for p in previous where p.container == nil { known[p.pid] = p }
     let reused = listen.compactMap { pid, l in known[pid]?.with(ports: l.ports.sorted()) }
     let fresh = listen.filter { known[$0.key] == nil }
-    guard !fresh.isEmpty else { return withConnections(await withContainers(reused.sortedByLowestPort()), listen) }
+    guard !fresh.isEmpty else { return withSocketState(await withContainers(reused.sortedByLowestPort()), listen) }
 
     let pids = fresh.keys.map(String.init).joined(separator: ",")
     async let details = run("/bin/ps", ["-o", "pid=,lstart=,%cpu=,rss=,comm=", "-p", pids])
@@ -28,14 +28,15 @@ public func scan(reusing previous: [ListeningProcess] = []) async throws -> [Lis
         commands: parsePsCommand(try await commands),
         cwds: parseLsofCwd(try await cwds)
     )
-    return withConnections(await withContainers((reused + new).sortedByLowestPort()), listen)
+    return withSocketState(await withContainers((reused + new).sortedByLowestPort()), listen)
 }
 
-/// Depois da expansão em containers: cada entrada conta só as conexões das próprias portas.
-func withConnections(_ processes: [ListeningProcess], _ listen: [Int32: LsofEntry]) -> [ListeningProcess] {
+/// Depois da expansão em containers: cada entrada olha só as próprias portas (conexões e exposição).
+func withSocketState(_ processes: [ListeningProcess], _ listen: [Int32: LsofEntry]) -> [ListeningProcess] {
     processes.map { p in
         var copy = p
         copy.inboundConnections = listen[p.pid]?.inbound.filter(p.ports.contains).count ?? 0
+        copy.isExposed = !(listen[p.pid]?.exposed ?? []).isDisjoint(with: p.ports)
         return copy
     }
 }

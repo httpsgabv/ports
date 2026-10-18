@@ -34,6 +34,15 @@ import Testing
         #expect(r.count == 3)
     }
 
+    @Test func exposedPortsFromListenAddress() {
+        let r = parseLsofListen(Fixture.lsofTCP)
+        #expect(r[620]?.exposed == [58996])        // *:58996
+        #expect(r[7359]?.exposed == [])            // 127.0.0.1
+        #expect(r[900]?.exposed == [])             // [::1]
+        let mixed = parseLsofListen("p1\ncnode\nn127.0.0.1:5173\nn[::]:5173\nn0.0.0.0:9000\nn127.0.0.1:9001\n")
+        #expect(mixed[1]?.exposed == [5173, 9000]) // v4 local + v6 exposto → exposto
+    }
+
     @Test func lsofListenEmpty() {
         #expect(parseLsofListen("").isEmpty)
     }

@@ -42,7 +42,8 @@ import Testing
         try #require(accepted >= 0)
         let me = try #require(try await mine(port))
         #expect(me.inboundConnections == 1)          // o lado cliente (porta efêmera) não conta
-        #expect(me.ports == [port])                  // conexões não viram portas
+        #expect(!me.ports.contains(try localPort(of: client)))   // a porta efêmera do cliente não vira porta
+        // (não comparar `me.ports == [port]`: outros testes em paralelo abrem portas no mesmo processo)
 
         close(client)
         close(accepted)
@@ -51,6 +52,16 @@ import Testing
 
     private func mine(_ port: UInt16) async throws -> ListeningProcess? {
         try await scan().first { $0.pid == getpid() && $0.ports.contains(port) }
+    }
+
+    private func localPort(of fd: Int32) throws -> UInt16 {
+        var addr = sockaddr_in()
+        var len = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let ok = withUnsafeMutablePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(fd, $0, &len) == 0 }
+        }
+        try #require(ok)
+        return UInt16(bigEndian: addr.sin_port)
     }
 
     private func connect(to port: UInt16) throws -> Int32 {

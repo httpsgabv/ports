@@ -10,6 +10,7 @@ struct ProcessRow: View {
     var isExpected = false
     var idleSince: Date?   // nil = desde o start (spec 09)
     var onToggleExpected: (() -> Void)?
+    var onOpenInEditor: (() -> Void)?
     let onToggle: () -> Void
     let onKill: () async -> KillResult
 
@@ -50,6 +51,7 @@ struct ProcessRow: View {
                     .lineLimit(1)
                     .accessibilityLabel("\(process.title), ports \(process.ports.map(String.init).joined(separator: ", ")), up \(uptime), \(activityLabel)")
                 Spacer(minLength: 8)
+                if process.isExposed { LanChip() }
                 ForEach(process.ports, id: \.self) { PortChip(port: $0) }
                 killButton
             }
@@ -124,6 +126,9 @@ struct ProcessRow: View {
                 if let cwd = process.cwd {
                     ActionButton(title: "Finder") { revealInFinder(cwd) }
                 }
+                if let onOpenInEditor {
+                    ActionButton(title: "Editor", action: onOpenInEditor)
+                }
                 if let onToggleExpected {
                     ActionButton(title: isExpected ? "Unexpect" : "Expect", action: onToggleExpected)
                         .help(isExpected ? "Count and highlight this process again" : "Don't count or highlight this process")
@@ -147,6 +152,21 @@ struct ProcessRow: View {
                 error = nil
             }
         }
+    }
+}
+
+/// Porta em `*`/`0.0.0.0`: qualquer um no mesmo Wi-Fi alcança (quase sempre um `--host` acidental).
+struct LanChip: View {
+    var body: some View {
+        Text("LAN")
+            .font(Theme.font(9, .medium))
+            .tracking(1)
+            .foregroundStyle(Theme.textSecondary)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
+            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.textTertiary, lineWidth: 1))
+            .help("Reachable from your local network")
+            .accessibilityLabel("Reachable from your local network")
     }
 }
 

@@ -14,6 +14,7 @@ struct GroupRow: View {
     let onKillAll: () async -> [KillResult]
     let onExpect: (ListeningProcess) -> Void
     let onExpectAll: () -> Void
+    var onOpenInEditor: (() -> Void)?
 
     @State private var hovering = false
     @State private var killing = false
@@ -57,6 +58,7 @@ struct GroupRow: View {
                     .fixedSize()
                     .accessibilityHidden(true)
                 Spacer(minLength: 8)
+                if group.processes.contains(where: \.isExposed) { LanChip() }
                 ForEach(group.ports.prefix(Self.maxChips), id: \.self) { PortChip(port: $0) }
                 if group.ports.count > Self.maxChips {
                     CapsLabel("+\(group.ports.count - Self.maxChips)")
@@ -82,10 +84,15 @@ struct GroupRow: View {
             .accessibilityHidden(true)
 
             if isExpanded {
-                ActionButton(title: "Expect all", action: onExpectAll)
-                    .help("Don't count or highlight these processes")
-                    .padding(.leading, 14)
-                    .padding(.top, 2)
+                HStack(spacing: 6) {
+                    if let onOpenInEditor {
+                        ActionButton(title: "Editor", action: onOpenInEditor)
+                    }
+                    ActionButton(title: "Expect all", action: onExpectAll)
+                        .help("Don't count or highlight these processes")
+                }
+                .padding(.leading, 14)
+                .padding(.top, 2)
             }
 
             if let error {

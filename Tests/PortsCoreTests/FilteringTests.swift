@@ -46,4 +46,11 @@ import Testing
         // lastActive de um pid antigo (anterior ao start) não conta
         #expect(node.idleSince(lastActive: node.startedAt.addingTimeInterval(-60)) == node.startedAt)
     }
+
+    @Test func totalMemoryOfVisibleNonExpected() {
+        let shown = split(visible(all, showSystem: false), expected: []).active
+        #expect(totalMemory(shown) == 16496 * 1024)                  // só o node da fixture
+        let none = split(shown, expected: Set(shown.map(expectationKey))).active
+        #expect(totalMemory(none) == 0)                               // esperados saem do total
+    }
 }

@@ -27,6 +27,8 @@ public struct ListeningProcess: Identifiable, Hashable, Sendable {
     public internal(set) var container: Container? = nil
     /// Conexões TCP de entrada estabelecidas nas portas deste processo/container (aba com HMR, app no banco…).
     public internal(set) var inboundConnections: Int = 0
+    /// Alguma porta em `*`/`0.0.0.0`/`[::]`: acessível pela rede local (spec 10).
+    public internal(set) var isExposed: Bool = false
 
     public var title: String { kind ?? name }
 

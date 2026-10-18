@@ -39,8 +39,8 @@
 
 ## Success Criteria
 
-- [ ] Testes de `isExposed` e total verdes.
-- [ ] Os três aceites manuais ok.
+- [x] Testes de `isExposed` (incl. mistura v4 local + v6 exposto e exposição por porta de container) e total verdes.
+- [x] Os três aceites manuais ok: LAN só no `http.server` em `*` (scan real: `LAN: true/false`); header `2 ACTIVE · 51 MB`; EDITOR abriu o repo no VS Code e, após trocar, no Xcode (`editorBundleID = com.apple.dt.Xcode` no plist).
 
 ## Open Questions
 

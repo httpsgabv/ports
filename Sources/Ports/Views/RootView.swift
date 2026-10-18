@@ -47,7 +47,7 @@ struct RootView: View {
         HStack {
             CapsLabel("Ports", color: Theme.textPrimary)
             Spacer()
-            CapsLabel("\(store.processes.count) active")
+            CapsLabel("\(store.processes.count) active · \(formatBytes(totalMemory(store.processes)))")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -160,6 +160,7 @@ struct RootView: View {
                 isExpanded: expanded == process.id,
                 idleSince: store.idleSince(process),
                 onToggleExpected: { store.setExpected([process], true) },
+                onOpenInEditor: editorAction(for: process.project?.root ?? process.cwd),
                 onToggle: { toggle(process.id) },
                 onKill: { await kill(process) }
             )
@@ -179,9 +180,16 @@ struct RootView: View {
                 onKill: kill,
                 onKillAll: { await killAll(group) },
                 onExpect: { store.setExpected([$0], true) },
-                onExpectAll: { store.setExpected(group.processes, true) }
+                onExpectAll: { store.setExpected(group.processes, true) },
+                onOpenInEditor: editorAction(for: group.project?.root)
             )
         }
+    }
+
+    /// Abre a raiz do projeto (ou o cwd) no editor escolhido; sem editor ou sem pasta → sem botão.
+    private func editorAction(for path: String?) -> (() -> Void)? {
+        guard let path, let editor = store.editor else { return nil }
+        return { open(path, in: editor) }
     }
 
     private func toggle(_ id: String) {

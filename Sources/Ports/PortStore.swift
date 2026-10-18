@@ -17,6 +17,14 @@ final class PortStore {
     private(set) var expectedKeys = Set(UserDefaults.standard.stringArray(forKey: "expectedKeys") ?? []) {
         didSet { UserDefaults.standard.set(expectedKeys.sorted(), forKey: "expectedKeys") }
     }
+    /// Editores instalados, detectados uma vez no launch (instalar um novo pede reabrir o app).
+    let editors = installedEditors()
+    /// "" = automático (o primeiro instalado).
+    var editorBundleID = UserDefaults.standard.string(forKey: "editorBundleID") ?? "" {
+        didSet { UserDefaults.standard.set(editorBundleID, forKey: "editorBundleID") }
+    }
+    var editor: Editor? { editors.first { $0.bundleID == editorBundleID } ?? editors.first }
+
     /// Aberto: scan completo (cpu/mem ao vivo). Fechado: só portas + pids novos (contador barato).
     var isPopoverOpen = false
 

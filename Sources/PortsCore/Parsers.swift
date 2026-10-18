@@ -7,7 +7,7 @@ struct PsDetails: Equatable {
     let executablePath: String
 }
 
-typealias LsofEntry = (name: String, ports: Set<UInt16>, inbound: [UInt16])
+typealias LsofEntry = (name: String, ports: Set<UInt16>, inbound: [UInt16], exposed: Set<UInt16>)
 
 /// `lsof -nP -iTCP -sTCP:LISTEN,ESTABLISHED -Fpcn`. Linhas com `->` são conexões (`local->remoto`):
 /// nunca viram portas; contam como entrada quando a porta local é uma das portas em LISTEN do pid.
@@ -23,7 +23,7 @@ func parseLsofListen(_ out: String) -> [Int32: LsofEntry] {
         switch line.first {
         case "p":
             pid = Int32(value)
-            if let pid, result[pid] == nil { result[pid] = ("", [], []) }
+            if let pid, result[pid] == nil { result[pid] = ("", [], [], []) }
         case "c":
             if let pid { result[pid]?.name = String(value) }
         case "n":
@@ -32,13 +32,17 @@ func parseLsofListen(_ out: String) -> [Int32: LsofEntry] {
                 if let local = port(value[..<arrow.lowerBound]) { result[pid]?.inbound.append(local) }
             } else if let listening = port(value) {
                 result[pid]?.ports.insert(listening)
+                // `*`, `0.0.0.0`, `[::]`: aceita conexões de qualquer interface (Wi-Fi incluído)
+                if ["*", "0.0.0.0", "[::]"].contains(value[..<value.lastIndex(of: ":")!]) {
+                    result[pid]?.exposed.insert(listening)
+                }
             }
         default:
             break
         }
     }
     return result.compactMapValues { entry in
-        entry.ports.isEmpty ? nil : (entry.name, entry.ports, entry.inbound.filter(entry.ports.contains))
+        entry.ports.isEmpty ? nil : (entry.name, entry.ports, entry.inbound.filter(entry.ports.contains), entry.exposed)
     }
 }
 

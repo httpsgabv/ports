@@ -87,6 +87,16 @@ import Testing
         #expect(group.internalContainerIDs == ["cccccccccccc"])
     }
 
+    @Test func exposureIsPerEntryPorts() throws {
+        // runtime: 8795 publicado em 0.0.0.0, 8796 só em 127.0.0.1
+        let listen = parseLsofListen("p1463\nccom.docker.backend\nn*:8795\nn127.0.0.1:8796\nn*:54322\n")
+        let runtime = ListeningProcess(pid: 1463, name: "com.docker.backend", ports: [8795, 8796, 54322], startedAt: .distantPast,
+                                       cpuPercent: 0, memoryBytes: 0, command: "", executablePath: "x", cwd: nil, isSystem: true)
+        let out = withSocketState(expandContainers([runtime], parseDockerPs(Self.ps), resolve: { Project(root: $0, name: "x") }), listen)
+        #expect(out.first { $0.container?.name == "ports-probe" }?.isExposed == true)   // 8795 exposta
+        #expect(out.first { $0.container?.name == "supabase_db_yt-city" }?.isExposed == true)
+    }
+
     @Test func containerKeyUsesName() throws {
         let c = try #require(expandContainers([runtime], parseDockerPs(Self.ps), resolve: { Project(root: $0, name: "x") })
             .first { $0.container?.name == "ports-probe" })

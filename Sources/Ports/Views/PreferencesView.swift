@@ -49,6 +49,17 @@ struct PreferencesView: View {
                 Toggle("", isOn: $store.showSystem).labelsHidden()
             }
             hairline
+            if !store.editors.isEmpty {
+                row("Editor") {
+                    Picker("", selection: $store.editorBundleID) {
+                        Text("Auto (\(store.editors[0].name))").tag("")
+                        ForEach(store.editors) { Text($0.name).tag($0.bundleID) }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
+                hairline
+            }
             row("Launch at login") {
                 Toggle("", isOn: $launchAtLogin).labelsHidden()
             }
