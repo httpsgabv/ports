@@ -7,6 +7,10 @@ public enum KillResult: Equatable, Sendable {
     case alreadyGone
     case pidReused         // PID agora é outro processo: nenhum sinal enviado
     case failed(String)
+
+    public var failure: String? {
+        if case .failed(let message) = self { message } else { nil }
+    }
 }
 
 /// SIGTERM, espera `grace`, depois SIGKILL. Só sinaliza se o pid ainda é o mesmo processo listado.
@@ -27,6 +31,18 @@ public func terminate(_ process: ListeningProcess, grace: Duration = .seconds(3)
 
     Darwin.kill(pid, SIGKILL)
     return await waitForExit(pid, timeout: .seconds(1)) ? .killed : .failed("still running")
+}
+
+/// Mata vários em paralelo (kill de grupo). Resultados na mesma ordem da entrada.
+public func terminateAll(_ processes: [ListeningProcess]) async -> [KillResult] {
+    await withTaskGroup(of: (Int, KillResult).self) { group in
+        for (i, p) in processes.enumerated() {
+            group.addTask { (i, await terminate(p)) }
+        }
+        var results = [KillResult](repeating: .alreadyGone, count: processes.count)
+        for await (i, r) in group { results[i] = r }
+        return results
+    }
 }
 
 func startTime(of pid: Int32) async -> Date? {

@@ -5,8 +5,8 @@ Spec: [specs/06-project-identity.md](../../specs/06-project-identity.md)
 ## Componentes
 
 1. `Sources/PortsCore/Identity.swift`
-   - `detectKind(command:executable:) -> String?`: tabela de regex da spec, avaliada em ordem.
-   - `resolveProject(cwd:home:) -> Project?`: sobe até achar `.git` (sem passar de `$HOME`), lê `package.json`, com cache `[cwd: Project]` em um `Mutex`/actor simples.
+   - `detectKind(command:executable:) -> String?`: tabela de tokens da spec, avaliada em ordem.
+   - `resolveProject(cwd:home:) -> Project?`: sobe até achar `.git` (sem passar de `$HOME`), lê `package.json`. Sem cache (só PIDs novos).
 2. `ListeningProcess`: novos campos `project`, `kind`. O `merge` preenche os dois, e o `with(ports:)` preserva.
 3. `Sources/PortsCore/Grouping.swift`: `ProcessGroup` + `groupByProject`.
 4. `Sources/PortsCore/Killer.swift`: `terminateAll(_:) async -> [KillResult]` em paralelo (`withTaskGroup`).
@@ -20,8 +20,8 @@ detectKind → resolveProject (dirs temporários) → campos no modelo + merge �
 
 | Risco | Mitigação |
 |---|---|
-| Regex genérica dá falso positivo (`\bnext\b` em qualquer path com "next") | testar com comandos reais; ancorar em `node_modules/.bin/next` ou `next-server`/`next dev` |
-| I/O de disco por tick | só para PIDs novos (o fluxo do `scan(reusing:)`) + cache por cwd |
+| Falso positivo com nome de pasta (`~/dev/next-gen`) | comparar o último componente de cada token em vez de regex; testado |
+| I/O de disco por tick | só para PIDs novos (o fluxo do `scan(reusing:)`) |
 | `ListeningProcess` com init interno cresce | testes usam um helper `fake(...)` com defaults |
 
 ## Checkpoint

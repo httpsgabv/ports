@@ -33,6 +33,17 @@ import Testing
         #expect(isAlive(real.pid))
     }
 
+    @Test func terminateAllInParallelKeepsOrder() async throws {
+        let ps = [try await spawnDetached("/bin/sleep 60"), try await spawnDetached("/bin/sleep 60"), try await spawnDetached("/bin/sleep 60")]
+        defer { ps.forEach { Darwin.kill($0.pid, SIGKILL) } }
+        let gone = fake(pid: ps[1].pid, startedAt: ps[1].startedAt.addingTimeInterval(-3600))   // pid "reusado"
+
+        let start = ContinuousClock.now
+        let results = await terminateAll([ps[0], gone, ps[2]])
+        #expect(results == [.terminated, .pidReused, .terminated])
+        #expect(ContinuousClock.now - start < .seconds(2))   // paralelo: não soma os tempos
+    }
+
     @Test(arguments: [Int32(1), getpid()])
     func refusesInitAndSelf(pid: Int32) async {
         #expect(await terminate(fake(pid: pid, startedAt: .now)) == .failed("refused"))

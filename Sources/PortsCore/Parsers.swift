@@ -84,7 +84,8 @@ func merge(
     listen: [Int32: (name: String, ports: Set<UInt16>)],
     details: [Int32: PsDetails],
     commands: [Int32: String],
-    cwds: [Int32: String]
+    cwds: [Int32: String],
+    resolve: (String) -> Project = { resolveProject(cwd: $0) }
 ) -> [ListeningProcess] {
     listen.compactMap { pid, l -> ListeningProcess? in
         guard let d = details[pid], !l.ports.isEmpty else { return nil }   // morreu no meio do scan
@@ -98,7 +99,9 @@ func merge(
             command: commands[pid] ?? d.executablePath,
             executablePath: d.executablePath,
             cwd: cwds[pid],
-            isSystem: isSystemPath(d.executablePath)
+            isSystem: isSystemPath(d.executablePath),
+            project: cwds[pid].map(resolve),
+            kind: detectKind(command: commands[pid] ?? "", executable: d.executablePath)
         )
     }
     .sortedByLowestPort()

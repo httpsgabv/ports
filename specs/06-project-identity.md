@@ -29,29 +29,29 @@ public func groupByProject(_ processes: [ListeningProcess]) -> [ProcessGroup]   
 
 ## Regras
 
-**Projeto:** sobe a partir do `cwd` até achar um `.git` (pasta ou arquivo, para cobrir worktrees). Se não achar, usa o próprio `cwd`. O nome vem do `"name"` do `package.json` da raiz (JSON inválido → ignora); se não houver, é o último componente do caminho. Resultado cacheado por `cwd`, e só PIDs novos pagam o I/O (mesma lógica do `scan(reusing:)`).
+**Projeto:** sobe a partir do `cwd` até achar um `.git` (pasta ou arquivo, para cobrir worktrees). Se não achar, usa o próprio `cwd`. O nome vem do `"name"` do `package.json` da raiz (JSON inválido → ignora); se não houver, é o último componente do caminho. Sem cache: só PIDs novos pagam o I/O (alguns `stat` e uma leitura de `package.json`), pela mesma lógica do `scan(reusing:)`.
 
-**Kind**, por regex na linha de comando, em ordem (o primeiro que casa ganha):
+**Kind**, por **tokens**: a linha de comando é quebrada por espaço, e de cada token fica só o último componente do caminho, sem `.js/.mjs/.cjs/.ts` (`…/vite/bin/vite.js` → `vite`). O primeiro kind com algum token presente ganha, nesta ordem. Regex sobre a linha inteira foi descartada: `~/dev/next-gen/server.js` viraria `NEXT`.
 
-| Kind | Casa com |
+| Kind | Tokens |
 |---|---|
-| `VITE` | `/vite(\.js)?\b` ou `\bvite\b` |
-| `NEXT` | `\bnext(-server)?\b` |
-| `NUXT` | `\bnuxt\b` |
-| `ASTRO` | `\bastro\b` |
-| `REMIX` | `\bremix\b` |
-| `STORYBOOK` | `\bstorybook\b` |
-| `EXPO` | `\bexpo\b` ou `\bmetro\b` |
-| `WEBPACK` | `webpack(-dev-server)?` |
-| `RAILS` | `\brails\b` ou `\bpuma\b` |
-| `DJANGO` | `manage\.py runserver` |
-| `UVICORN` | `\buvicorn\b` |
-| `FLASK` | `\bflask\b` |
-| `HTTP.SERVER` | `http\.server` |
-| `POSTGRES` | executável `postgres` |
-| `REDIS` | executável `redis-server` |
-| `MYSQL` | executável `mysqld` |
-| `MONGO` | executável `mongod` |
+| `VITE` | `vite` |
+| `NEXT` | `next`, `next-server` |
+| `NUXT` | `nuxt`, `nuxi` |
+| `ASTRO` | `astro` |
+| `REMIX` | `remix`, `remix-serve` |
+| `STORYBOOK` | `storybook` |
+| `EXPO` | `expo`, `metro` |
+| `WEBPACK` | `webpack`, `webpack-dev-server` |
+| `RAILS` | `rails`, `puma` |
+| `DJANGO` | `runserver` |
+| `UVICORN` | `uvicorn` |
+| `FLASK` | `flask` |
+| `HTTP.SERVER` | `http.server` |
+| `POSTGRES` | `postgres` |
+| `REDIS` | `redis-server` |
+| `MYSQL` | `mysqld` |
+| `MONGO` | `mongod` |
 
 Sem match → `nil`, e a UI mostra o `name` do processo como hoje.
 
@@ -85,9 +85,10 @@ Sem match → `nil`, e a UI mostra o `name` do processo como hoje.
 
 ## Success Criteria
 
-- [ ] Testes de kind, agrupamento e resolução de projeto verdes.
-- [ ] Checklist manual de agrupamento e kill do grupo ok.
-- [ ] CPU ociosa re-medida < 1%.
+- [x] Testes de kind (22 comandos reais, incl. falsos positivos), agrupamento, resolução de projeto e `terminateAll` verdes.
+- [x] Checklist manual de agrupamento e kill do grupo ok. Verificado no log (`/usr/bin/log show --predicate 'subsystem == "dev.gabriel.ports"'`): clique → `killAll` → `[terminated, terminated]` em ~110ms, 2× seguidas.
+  - ⚠️ Duas tentativas anteriores deixaram os servidores vivos, sem registro (antes do log / log em `.info`, que não persiste). Não reproduzido; o log de kill em `.notice` fica no app para diagnosticar se voltar.
+- [x] CPU ociosa re-medida < 1%: app 0,05% em 60s; filhos sem mudança (projeto só para PIDs novos).
 
 ## Open Questions
 
