@@ -38,7 +38,8 @@ Três ajustes, persistidos, sem janela separada: a tela de preferências substit
 
 ## Success Criteria
 
-- [x] Checklist manual: stale, show system, persistência após quit, launch at login em Login Items.
+- [x] Checklist manual: stale, show system e launch at login em Login Items.
+- [ ] Persistência após quit: `defaults read dev.gabriel.ports` vazio após o teste; reconfirmar.
 - [ ] Ciclo real de logout/login: ainda não verificado.
 
 ## Open Questions
